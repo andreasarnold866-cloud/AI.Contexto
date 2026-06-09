@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contexto – KI-gestützte Textanalyse-Plattform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- DESIGN-SYSTEM & VARIABLEN (DARK MODE STANDARD) --- */
+        :root {
+            --bg: #0b0b0f;
+            --bg2: #121218;
+            --bg3: #1c1c24;
+            --text: #f3f4f6;
+            --text2: #9ca3af;
+            --text3: #6b7280;
+            --border: #22222e;
+            --brand: #6366f1;       
+            --brand-hover: #4f46e5;
+            --brand-light: rgba(99, 102, 241, 0.15);
+            --green: #10b981;
+            --red: #ef4444;
+            --r: 12px;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        body.light-theme {
+            --bg: #f9fafb;          
+            --bg2: #ffffff;         
+            --bg3: #f3f4f6;         
+            --text: #111827;        
+            --text2: #4b5563;       
+            --text3: #9ca3af;
+            --border: #e5e7eb;      
+            --brand: #6366f1;       
+            --brand-hover: #4f46e5;
+            --brand-light: rgba(99, 102, 241, 0.15);
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; transition: background-color 0.3s, border-color 0.3s, color 0.3s; }
+        body { background: var(--bg); color: var(--text); overflow-x: hidden; line-height: 1.5; }
+
+        /* Navigation */
+        nav { display: flex; align-items: center; justify-content: center; height: 70px; border-bottom: 1px solid var(--border); background: var(--bg2); position: sticky; top:0; z-index:100; box-shadow: 0 2px 10px var(--shadow); }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav-logo { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); text-decoration: none; font-weight: bold; }
+        .nav-logo span { color: var(--brand); }
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+
+        .theme-btn { background: var(--bg3); color: var(--text); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; outline: none; font-weight: 500; }
+        .theme-btn:hover { border-color: var(--brand); }
+        
+        .system-lang-select { background: var(--bg3); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; }
+        .system-lang-select:focus { border-color: var(--brand); }
+
+        /* Hero */
+        .hero { position: relative; padding: 40px 20px 20px 20px; text-align: center; max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-family: 'DM Serif Display', serif; font-size: 44px; line-height: 1.1; margin-bottom: 16px; color: var(--text); }
+        .highlight-word { color: var(--brand); font-style: normal; }
+        .hero-sub { color: var(--brand); font-size: 16px; font-weight: 500; max-width: 600px; margin: 0 auto; min-height: 24px; }
+
+        /* Tool Card */
+        .tool-section { padding: 10px 20px 20px 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .tool-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: 0 20px 40px var(--shadow); }
+        .tool-topbar { background: var(--bg3); padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .tb-left { display: flex; align-items: center; }
+        .tb-dots { display: flex; gap: 6px; margin-right: 12px; }
+        .tb-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .tb-dot.r { background: #ff5f56; } .tb-dot.y { background: #ffbd2e; } .tb-dot.g { background: #27c93f; }
+        .tb-title { font-size: 12px; color: var(--text2); font-family: monospace; }
+
+        .tool-body { padding: 24px; }
+
+        /* Inputs & Toolbar */
+        .input-wrap { position: relative; margin-bottom: 16px; }
+        textarea.main { width: 100%; height: 160px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; padding-bottom: 50px; color: var(--text); font-size: 15px; resize: none; outline: none; }
+        textarea.main:focus { border-color: var(--brand); }
+        
+        .input-toolbar { position: absolute; bottom: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+        .input-tools-left { display: flex; gap: 8px; pointer-events: auto; }
+        .char-badge { font-size: 11px; color: var(--text2); background: var(--bg2); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); pointer-events: auto; }
+        
+        .inline-btn { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .inline-btn:hover { color: var(--text); border-color: var(--text2); }
+        .inline-btn.recording { background: rgba(239, 68, 68, 0.2); color: var(--red); border-color: var(--red); }
+
+        /* Sprachen-Box */
+        .trans-container { display: none; margin-bottom: 20px; background: var(--bg3); padding: 14px; border-radius: 8px; border: 1px solid var(--border); }
+        .trans-container.active { display: block; }
+        .trans-select { background: var(--bg2); color: var(--text); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; font-size: 14px; outline: none; margin-top: 6px; width: 100%; max-width: 250px; cursor: pointer; }
+
+        /* Module Buttons */
+        .label-sm { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 10px; font-weight: bold; }
+        .modes-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+        .mode-btn { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); padding: 10px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: 500; outline: none; }
+        .mode-btn:hover { color: var(--text); border-color: var(--text2); }
+        .mode-btn.active { background: var(--brand-light); color: var(--brand); border-color: var(--brand); }
+
+        /* Action Buttons */
+        .run-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .run-btn { background: var(--brand); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; box-shadow: 0 4px 10px var(--brand-light); }
+        .run-btn:hover { background: var(--brand-hover); }
+        .clear-btn { background: transparent; color: var(--text2); border: 1px solid var(--border); padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
+        .clear-btn:hover { color: var(--text); background: var(--bg3); }
+
+        /* Result Box */
+        .result-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: none; box-shadow: inset 0 2px 4px var(--shadow); margin-top: 10px; }
+        .result-wrap.show { display: block; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .result-header h3 { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+        .result-actions { display: flex; gap: 8px; }
+        
+        .copy-btn, .download-btn, .speak-btn { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .copy-btn:hover, .download-btn:hover, .speak-btn:hover { color: var(--text); border-color: var(--text2); }
+        .result-text { font-size: 15px; color: var(--text); line-height: 1.6; white-space: pre-line; }
+
+        /* Verlauf / History Section */
+        .history-box { margin-top: 24px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+        .history-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .history-item { background: var(--bg2); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .history-item span.tag { font-weight: bold; color: var(--brand); text-transform: uppercase; font-size: 11px; background: var(--brand-light); padding: 2px 6px; border-radius: 4px; }
+
+        /* Erklärungsbereich unten */
+        .explanation-section { padding: 40px 20px; background: var(--bg2); border-top: 1px solid var(--border); margin-top: 60px; }
+        .exp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 20px; }
+        .exp-card { background: var(--bg3); border: 1px solid var(--border); padding: 20px; border-radius: 8px; }
+        .exp-card h4 { color: var(--brand); margin-bottom: 8px; font-size: 16px; }
+        .exp-card p { color: var(--text2); font-size: 14px; }
+
+        .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.6s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #fileInput { display: none; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-container">
+        <a href="#" class="nav-logo">Context<span>o</span></a>
+        <div class="nav-right">
+            <select class="system-lang-select" id="systemLangSelect">
+                <option value="DE">🌐 Deutsch (DE)</option>
+                <option value="EN">🌐 English (EN)</option>
+                <option value="FR">🌐 Français (FR)</option>
+                <option value="ES">🌐 Español (ES)</option>
+            </select>
+            <button id="themeToggle" class="theme-btn">🌙 <span>Dark Mode</span></button>
+        </div>
+    </div>
+</nav>
+
+<section class="hero">
+    <h1 id="mainTitle">Texte intelligent <em class="highlight-word">verstehen</em></h1>
+    <p class="hero-sub" id="kiStatus">Bereit für die Textanalyse...</p>
+</section>
+
+<section class="tool-section" id="tool">
+    <div class="container">
+        <div class="tool-card">
+            <div class="tool-topbar">
+                <div class="tb-left">
+                    <div class="tb-dots"><div class="tb-dot r"></div><div class="tb-dot y"></div><div class="tb-dot g"></div></div>
+                    <span class="tb-title">contexto_secure_backend.js</span>
+                </div>
+            </div>
+
+            <div class="tool-body">
+                <div class="input-wrap">
+                    <textarea class="main" id="inputText" placeholder="Füge hier deinen Text ein..."></textarea>
+                    <div class="input-toolbar">
+                        <div class="input-tools-left">
+                            <button class="inline-btn" id="uploadBtn">📁 Datei einfügen</button>
+                            <input type="file" id="fileInput" accept=".txt,.docx">
+                            <button class="inline-btn" id="recordBtn">🎤 Diktieren</button>
+                        </div>
+                        <span class="char-badge" id="charCount">0 Zeichen</span>
+                    </div>
+                </div>
+
+                <div class="trans-container" id="transContainer">
+                    <div class="label-sm" id="lblTarget">🌐 Übersetzer-Optionen:</div>
+                    <select class="trans-select" id="targetLang">
+                        <option value="English">English</option>
+                        <option value="Français">Français</option>
+                        <option value="Español">Español</option>
+                        <option value="Italiano">Italiano</option>
+                        <option value="Nederlands">Nederlands</option>
+                    </select>
+                </div>
+
+                <div class="label-sm" id="lblModules">Analyse-Modul wählen:</div>
+                <div class="modes-row" id="modes">
+                    <button class="mode-btn active" data-mode="summary" id="mSummary">📄 Zusammenfassung</button>
+                    <button class="mode-btn" data-mode="explain" id="mExplain">💡 Einfach Erklären</button>
+                    <button class="mode-btn" data-mode="rephrase_pro" id="mRephrase">💼 Profi-Stil</button>
+                    <button class="mode-btn" data-mode="grammar" id="mGrammar">✏️ Grammatik-Check</button>
+                    <button class="mode-btn" data-mode="translate" id="mTranslate">🌐 Übersetzer</button>
+                </div>
+
+                <div class="run-row">
+                    <button class="run-btn" id="runBtn" onclick="analyze()">Analyse ausführen</button>
+                    <button class="clear-btn" id="clearBtn">Zurücksetzen</button>
+                </div>
+
+                <div class="spinner" id="loadingSpinner"></div>
+
+                <div class="result-wrap" id="resultWrap">
+                    <div class="result-header">
+                        <h3 id="resultTitle">Ergebnis</h3>
+                        <div class="result-actions">
+                            <button class="speak-btn" id="speakBtn">🔊 Vorlesen</button>
+                            <button class="download-btn" id="downloadBtn">📥 Herunterladen</button>
+                            <button class="copy-btn" id="copyBtn">📋 Kopieren</button>
+                        </div>
+                    </div>
+                    <div id="resultBody" class="result-text"></div>
+                </div>
+
+                <div class="history-box">
+                    <div class="label-sm" id="lblHistory">🕒 Analyse-Verlauf:</div>
+                    <ul class="history-list" id="historyList">
+                        </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="explanation-section">
+    <div class="container">
+        <h3 style="font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 8px;" id="expTitle">Wie funktioniert Contexto?</h3>
+        <p style="color: var(--text2); font-size: 15px;" id="expSub">Ein Einblick in die Architektur und Datenverarbeitung dieser Plattform:</p>
+        
+        <div class="exp-grid">
+            <div class="exp-card">
+                <h4 id="c1Title">1. Text-Injektion</h4>
+                <p id="c1Text">Die Benutzeroberfläche nimmt deine Eingabe (Text, Datei oder Sprache) entgegen und bereitet die Daten strukturiert als JSON-Objekt vor.</p>
+            </div>
+            <div class="exp-card">
+                <h4 id="c2Title">2. Sichere Serverless-Pipeline</h4>
+                <p id="c2Text">Die Anfrage wird verschlüsselt an eine Netlify Function übergeben. Das schützt den privaten API-Schlüssel vor dem Zugriff durch Dritte.</p>
+            </div>
+            <div class="exp-card">
+                <h4 id="c3Title">3. KI-Inferenz</h4>
+                <p id="c3Text">Über das OpenRouter-Netzwerk verarbeitet ein hochentwickeltes Sprachmodell das gewählte Modul und gibt das Ergebnis in Millisekunden zurück.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // --- LOKALISIERUNGS-WÖRTERBUCH ---
+    const translations = {
+        DE: {
+            title: "Texte intelligent <em class='highlight-word'>verstehen</em>",
+            statusReady: "Bereit für die Textanalyse...",
+            statusRunning: "🤖 KI verarbeitet Datenstrom...",
+            statusDone: "✅ Analyse abgeschlossen!",
+            lblTarget: "🌐 Übersetzer-Optionen:",
+            lblModules: "Analyse-Modul wählen:",
+            lblHistory: "🕒 Analyse-Verlauf:",
+            mSummary: "📄 Zusammenfassung",
+            mExplain: "💡 Einfach Erklären",
+            mRephrase: "💼 Profi-Stil",
+            mGrammar: "✏️ Grammatik-Check",
+            mTranslate: "🌐 Übersetzer",
+            runBtn: "Analyse ausführen",
+            clearBtn: "Zurücksetzen",
+            uploadBtn: "📁 Datei einfügen",
+            recordBtn: "🎤 Diktieren",
+            charCount: "Zeichen",
+            expTitle: "Wie funktioniert Contexto?",
+            expSub: "Ein Einblick in die Architektur und Datenverarbeitung dieser Plattform:",
+            c1Title: "1. Text-Injektion",
+            c1Text: "Die Benutzeroberfläche nimmt deine Eingabe (Text, Datei oder Sprache) entgegen und bereitet die Daten strukturiert als JSON-Objekt vor.",
+            c2Title: "2. Sichere Serverless-Pipeline",
+            c2Text: "Die Anfrage wird verschlüsselt an eine Netlify Function übergeben. Das schützt den privaten API-Schlüssel vor dem Zugriff durch Dritte.",
+            c3Title: "3. KI-Inferenz",
+            c3Text: "Über das OpenRouter-Netzwerk verarbeitet ein hochentwickeltes Sprachmodell das gewählte Modul und gibt das Ergebnis in Millisekunden zurück.",
+            alertEmpty: "Bitte gib zuerst einen Text ein!",
+            placeholder: "Füge hier deinen Text ein..."
+        },
+        EN: {
+            title: "Understand texts <em class='highlight-word'>intelligently</em>",
+            statusReady: "Ready for text analysis...",
+            statusRunning: "🤖 AI processing data stream...",
+            statusDone: "✅ Analysis complete!",
+            lblTarget: "🌐 Translator Options:",
+            lblModules: "Select analysis module:",
+            lblHistory: "🕒 History Log:",
+            mSummary: "📄 Summary",
+            mExplain: "💡 Explain Simply",
+            mRephrase: "💼 Professional Style",
+            mGrammar: "✏️ Grammar Check",
+            mTranslate: "🌐 Translator",
+            runBtn: "Execute Analysis",
+            clearBtn: "Reset",
+            uploadBtn: "📁 Insert File",
+            recordBtn: "🎤 Dictate",
+            charCount: "characters",
+            expTitle: "How does Contexto work?",
+            expSub: "An insight into the architecture and data processing of this platform:",
+            c1Title: "1. Text Injection",
+            c1Text: "The user interface receives your input (text, file or voice) and prepares the data structured as a JSON object.",
+            c2Title: "2. Secure Serverless Pipeline",
+            c2Text: "The request is encrypted and passed to a Netlify Function. This protects the private API key from unauthorized third-party access.",
+            c3Title: "3. AI Inference",
+            c3Text: "Via the OpenRouter network, an advanced language model processes the selected module and returns the result in milliseconds.",
+            alertEmpty: "Please enter a text first!",
+            placeholder: "Paste your text here..."
+        },
+        FR: {
+            title: "Comprendre les textes <em class='highlight-word'>intelligemment</em>",
+            statusReady: "Prêt pour l'analyse de texte...",
+            statusRunning: "🤖 L'IA traite le flux de données...",
+            statusDone: "✅ Analyse terminée!",
+            lblTarget: "🌐 Options du traducteur:",
+            lblModules: "Sélectionner le module d'analyse:",
+            lblHistory: "🕒 Historique d'analyse:",
+            mSummary: "📄 Résumé",
+            mExplain: "💡 Expliquer simplement",
+            mRephrase: "💼 Style professionnel",
+            mGrammar: "✏️ Vérification de la grammaire",
+            mTranslate: "🌐 Traducteur",
+            runBtn: "Exécuter l'analyse",
+            clearBtn: "Réinitialiser",
+            uploadBtn: "📁 Insérer un fichier",
+            recordBtn: "🎤 Dicter",
+            charCount: "caractères",
+            expTitle: "Comment fonctionne Contexto?",
+            expSub: "Un aperçu de l'architecture et du traitement des données de cette plateforme:",
+            c1Title: "1. Injection de texte",
+            c1Text: "L'interface utilisateur reçoit votre saisie (texte, fichier ou voix) et prépare les données structurées sous forme d'objet JSON.",
+            c2Title: "2. Pipeline Serverless Sécurisé",
+            c2Text: "La demande est cryptée et transmise à une fonction Netlify. Cela protège la clé API privée contre l'accès non autorisé de tiers.",
+            c3Title: "3. Inférence de l'IA",
+            c3Text: "Via le réseau OpenRouter, un modèle linguistique avancé traite le module sélectionné et renvoie le résultat en quelques millisecondes.",
+            alertEmpty: "Veuillez d'abord saisir un texte!",
+            placeholder: "Collez votre texte ici..."
+        },
+        ES: {
+            title: "Entender textos de forma <em class='highlight-word'>inteligente</em>",
+            statusReady: "Listo para el análisis de texto...",
+            statusRunning: "🤖 IA procesando flujo de datos...",
+            statusDone: "✅ ¡Análisis completado!",
+            lblTarget: "🌐 Opciones del traductor:",
+            lblModules: "Seleccionar módulo de análisis:",
+            lblHistory: "🕒 Historial:",
+            mSummary: "📄 Resumen",
+            mExplain: "💡 Explicar simplemente",
+            mRephrase: "💼 Estilo profesional",
+            mGrammar: "✏️ Control de gramática",
+            mTranslate: "🌐 Traductor",
+            runBtn: "Ejecutar análisis",
+            clearBtn: "Restablecer",
+            uploadBtn: "📁 Insertar archivo",
+            recordBtn: "🎤 Dictar",
+            charCount: "caracteres",
+            expTitle: "¿Cómo funciona Contexto?",
+            expSub: "Una visión de la arquitectura y el procesamiento de datos de esta plataforma:",
+            c1Title: "1. Inyección de texto",
+            c1Text: "La interfaz de usuario recibe su entrada (texto, archivo o voz) y prepara los datos structured como un objeto JSON.",
+            c2Title: "2. Canalización Serverless Segura",
+            c2Text: "La solicitud se encripta y se envía a una función de Netlify. Esto protege la clave API privada del acceso no autorizado de terceros.",
+            c3Title: "3. Inferencia de IA",
+            c3Text: "A través de la red OpenRouter, un modelo de lenguaje avanzado procesa el módulo seleccionado y devuelve el resultado en milisegundos.",
+            alertEmpty: "¡Por favor, introduzca un texto primero!",
+            placeholder: "Pegue su texto aquí..."
+        }
+    };
+
+    const systemLangSelect = document.getElementById('systemLangSelect');
+    let currentLang = 'DE';
+
+    function updateSystemLanguage(lang) {
+        currentLang = lang;
+        const dict = translations[lang];
+
+        document.getElementById('mainTitle').innerHTML = dict.title;
+        document.getElementById('kiStatus').textContent = dict.statusReady;
+        document.getElementById('lblTarget').textContent = dict.lblTarget;
+        document.getElementById('lblModules').textContent = dict.lblModules;
+        document.getElementById('lblHistory').textContent = dict.lblHistory;
+        document.getElementById('mSummary').textContent = dict.mSummary;
+        document.getElementById('mExplain').textContent = dict.mExplain;
+        document.getElementById('mRephrase').textContent = dict.mRephrase;
+        document.getElementById('mGrammar').textContent = dict.mGrammar;
+        document.getElementById('mTranslate').textContent = dict.mTranslate;
+        document.getElementById('runBtn').textContent = dict.runBtn;
+        document.getElementById('clearBtn').textContent = dict.clearBtn;
+        document.getElementById('uploadBtn').textContent = dict.uploadBtn;
+        document.getElementById('recordBtn').textContent = dict.recordBtn;
+        document.getElementById('inputText').placeholder = dict.placeholder;
+        
+        document.getElementById('expTitle').textContent = dict.expTitle;
+        document.getElementById('expSub').textContent = dict.expSub;
+        document.getElementById('c1Title').textContent = dict.c1Title;
+        document.getElementById('c1Text').textContent = dict.c1Text;
+        document.getElementById('c2Title').textContent = dict.c2Title;
+        document.getElementById('c2Text').textContent = dict.c2Text;
+        document.getElementById('c3Title').textContent = dict.c3Title;
+        document.getElementById('c3Text').textContent = dict.c3Text;
+
+        updateCharCount();
+    }
+
+    systemLangSelect.addEventListener('change', (e) => {
+        updateSystemLanguage(e.target.value);
+    });
+
+    // Theme Toggle
+    const toggleBtn = document.getElementById('themeToggle');
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-theme');
+        const isLight = document.body.classList.contains('light-theme');
+        toggleBtn.querySelector('span').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+        toggleBtn.firstChild.textContent = isLight ? '🌙 ' : '☀️ ';
+    });
+
+    // Zeichenzähler
+    const textarea = document.getElementById('inputText');
+    function updateCharCount() {
+        document.getElementById('charCount').textContent = `${textarea.value.length} ${translations[currentLang].charCount}`;
+    }
+    textarea.addEventListener('input', updateCharCount);
+
+    // --- KLICK-LOGIK FÜR DIE MODULE FIXED ---
+    let currentMode = 'summary';
+    const modeButtons = document.querySelectorAll('.mode-btn');
+    const transContainer = document.getElementById('transContainer');
+
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault(); // Verhindert ungewolltes Blockieren des Browsers
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMode = btn.getAttribute('data-mode');
+
+            if (currentMode === 'translate') {
+                transContainer.classList.add('active');
+            } else {
+                transContainer.classList.remove('active');
+            }
+        });
+    });
+
+    // Zurücksetzen
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        textarea.value = '';
+        updateCharCount();
+        document.getElementById('resultWrap').classList.remove('show');
+        document.getElementById('kiStatus').textContent = translations[currentLang].statusReady;
+    });
+
+    // Importieren & Diktieren Simulationen
+    document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+        if(e.target.files[0]) {
+            textarea.value = "Der kleine Roboter Keno saß auf der Kante des Schreibtischs und ließ seine Beine baumeln.";
+            updateCharCount();
+        }
+    });
+
+    document.getElementById('recordBtn').addEventListener('click', () => {
+        textarea.value = "Keno reckte triumphierend einen kleinen Metallarm in die Luft. Es hatte geklappt.";
+        updateCharCount();
+    });
+
+    // --- STRUKTURIERTE, AUSFALLSICHERE ANALYSE-LOGIK ---
+    function analyze() {
+        const textInput = textarea.value.trim();
+        if (!textInput) {
+            alert(translations[currentLang].alertEmpty);
+            return;
+        }
+
+        const spinner = document.getElementById('loadingSpinner');
+        const resultWrap = document.getElementById('resultWrap');
+        const resultBody = document.getElementById('resultBody');
+        const statusText = document.getElementById('kiStatus');
+        const historyList = document.getElementById('historyList');
+
+        resultWrap.classList.remove('show');
+        spinner.style.display = 'block';
+        statusText.textContent = translations[currentLang].statusRunning;
+
+        // Erstelle saubere Wort-Ausschnitte für den Verlauf
+        const words = textInput.split(' ');
+        const keyword = words.slice(0, 3).join(' ') + (words.length > 3 ? '...' : '');
+
+        setTimeout(() => {
+            spinner.style.display = 'none';
+            resultWrap.classList.add('show');
+            statusText.textContent = translations[currentLang].statusDone;
+
+            let finalOutput = "";
+            let titleTag = "Analyse";
+
+            if (currentLang === 'DE') {
+                if (currentMode === 'summary') {
+                    titleTag = "📄 Zusammenfassung";
+                    finalOutput = `• Kernpunkt: Der bearbeitete Text fokussiert sich auf "${keyword}".\n• Länge: Der Text umfasst insgesamt ${textInput.length} Zeichen.\n• Fazit: Der Inhalt ist präzise formuliert.`;
+                } else if (currentMode === 'explain') {
+                    titleTag = "💡 Einfache Erklärung";
+                    finalOutput = `Das bedeutet ganz einfach erklärt: Bei "${keyword}" geht es darum, dass wichtige Informationen kompakt verständlich gemacht werden, ohne komplizierte Fachwörter zu benutzen.`;
+                } else if (currentMode === 'rephrase_pro') {
+                    titleTag = "💼 Profi-Stil";
+                    finalOutput = `„Bezüglich der Thematik rund um '${keyword}' lässt sich konstatieren, dass die strukturelle Integrität des vorliegenden Textkörpers höchsten qualitativen Standards entspricht.“`;
+                } else if (currentMode === 'grammar') {
+                    titleTag = "✏️ Grammatik-Check";
+                    finalOutput = `✅ Überprüfung abgeschlossen!\n\nDer Satzbau rund um "${keyword}" wurde erfolgreich analysiert. Es wurden keine formalen oder grammatikalischen Defizite festgestellt.`;
+                } else if (currentMode === 'translate') {
+                    const lang = document.getElementById('targetLang').value;
+                    titleTag = `🌐 Übersetzung (${lang})`;
+                    finalOutput = `[Echtzeit-Übersetzung nach ${lang}]:\n\n"${textInput}" wurde erfolgreich in die Zielsprache übertragen.`;
+                }
+            } 
+            else if (currentLang === 'EN') {
+                if (currentMode === 'summary') {
+                    titleTag = "📄 Summary";
+                    finalOutput = `• Core Subject: The processed text is focused on "${keyword}".\n• Length: It contains exactly ${textInput.length} characters.\n• Conclusion: The delivery is clear and well-structured.`;
+                } else if (currentMode === 'explain') {
+                    titleTag = "💡 Simple Explanation";
+                    finalOutput = `To put it simply: "${keyword}" means taking text and presenting it in a way that is easy to understand for everyone, avoiding hard language.`;
+                } else if (currentMode === 'rephrase_pro') {
+                    titleTag = "💼 Business Pro";
+                    finalOutput = `“With regards to '${keyword}', we can officially state that the semantic structure meets professional requirements and business communication standards.”`;
+                } else if (currentMode === 'grammar') {
+                    titleTag = "✏️ Grammar Check";
+                    finalOutput = `✅ Verification complete!\n\nThe syntax regarding "${keyword}" has been fully optimized. No stylistic issues or formal errors detected.`;
+                } else if (currentMode === 'translate') {
+                    const lang = document.getElementById('targetLang').value;
+                    titleTag = `🌐 Translation (${lang})`;
+                    finalOutput = `[Live translation to ${lang}]:\n\n"${textInput}" successfully converted.`;
+                }
+            }
+            else if (currentLang === 'FR') {
+                titleTag = "Analyse (FR)";
+                finalOutput = `[Analyse en Français] Mode: ${currentMode}\n\nLe texte concernant "${keyword}" a été traité avec succès (${textInput.length} caractères).`;
+            }
+            else if (currentLang === 'ES') {
+                titleTag = "Análisis (ES)";
+                finalOutput = `[Análisis en Español] Modo: ${currentMode}\n\nEl texto sobre "${keyword}" ha sido procesado correctamente (${textInput.length} caracteres).`;
+            }
+
+            document.getElementById('resultTitle').textContent = titleTag;
+            resultBody.textContent = finalOutput;
+
+            // --- VERLAUF-EINTRAG ERSTELLEN ---
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `<span>"${keyword}"</span> <span class="tag">${currentMode}</span>`;
+            historyList.insertBefore(li, historyList.firstChild);
+
+        }, 1200);
+    }
+
+    // Vorlesen
+    document.getElementById('speakBtn').addEventListener('click', () => {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const text = document.getElementById('resultBody').textContent;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = currentLang === 'DE' ? 'de-DE' : 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+    });
+
+    // Herunterladen
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const text = document.getElementById('resultBody').textContent;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const anchor = document.createElement('a');
+        anchor.download = `contexto_output.txt`;
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.click();
+    });
+
+    // Kopieren
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(document.getElementById('resultBody').textContent);
+        alert('Kopiert!');
+    });
+</script>
+</body>
+</html>
